@@ -1,0 +1,30 @@
+version: 0.19.0
+name: kubeconeu-question-1
+namespace: ""
+runtime: go
+registry: ""
+image: docker.io/salaboy/kubeconeu-question-1:latest
+imageDigest: sha256:5470fb6c2a21761cefcbef9275d73e3bb04a8088efa207e1701b8daa664f925e
+build: local
+builder: gcr.io/paketo-buildpacks/builder:base
+builders:
+  base: gcr.io/paketo-buildpacks/builder:base
+  default: gcr.io/paketo-buildpacks/builder:base
+  full: gcr.io/paketo-buildpacks/builder:full
+buildpacks:
+- paketo-buildpacks/go-dist
+- ghcr.io/boson-project/go-function-buildpack:tip
+volumes: []
+buildEnvs: []
+envs:
+- name: REDIS_HOST
+  value: 10.200.130.188:6379
+annotations: {}
+options: {}
+labels: []
+healthEndpoints:
+  liveness: /health/liveness
+  readiness: /health/readiness
+created: 2022-05-02T08:17:12.869606+01:00
+invocation:
+  format: http
