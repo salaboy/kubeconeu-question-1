@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis"
+	"github.com/google/uuid"
+	"log"
 	"net/http"
 	"os"
 	"time"
-	"github.com/go-redis/redis"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 
@@ -27,16 +30,11 @@ type GameScore struct {
 	LevelScore int
 }
 
-type GameTime struct{
-	GameTimeId string
-	SessionId string
-	Level string
-	Type string
-	Time      time.Time
-}
 
 var redisHost = os.Getenv("REDIS_HOST") // This should include the port which is most of the time 6379
 var redisPassword = os.Getenv("REDIS_PASSWORD")
+var cloudEventsEnabled = os.Getenv("CLOUDEVENTS_ENABLED")
+var sink = os.Getenv("SINK")
 
 // Handle an HTTP Request.
 func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
@@ -68,6 +66,7 @@ func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	}
 	if answers.OptionD == true {
 		points = 3 // KubeCon/KnativeCon special bonus!
+
 	}
 
 	points += answers.RemainingTime
@@ -90,28 +89,40 @@ func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
+	emitCloudEvent(scoreJson)
 
-	gt := GameTime{
-		GameTimeId: "time-" + score.SessionId,
-		SessionId:  score.SessionId,
-		Level:      score.Level,
-		Type:       "end",
-		Time:       score.Time,
-	}
-
-	gameTimeJson, err := json.Marshal(gt)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = client.RPush(gt.GameTimeId, string(gameTimeJson)).Err()
-	// if there has been an error setting the value
-	// handle the error
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
-	}
 	res.Header().Set("Content-Type", "application/json")
 	fmt.Fprintln(res, string(scoreJson))
+}
+
+func emitCloudEvent(gs []byte) error {
+	c, err := cloudevents.NewClientHTTP()
+	if err != nil {
+		log.Fatalf("failed to create client, %v", err)
+	}
+
+	// Create an Event.
+	event := cloudevents.NewEvent()
+	newUUID, _ := uuid.NewUUID()
+	event.SetID(newUUID.String())
+	event.SetTime(time.Now())
+	event.SetSource("kubeconeu-question-1")
+	event.SetType("GameScoreEvent")
+	event.SetData(cloudevents.ApplicationJSON, gs)
+
+	log.Printf("Emitting an Event: %s to SINK: %s", event, sink)
+
+	// Set a target.
+	ctx := cloudevents.ContextWithTarget(context.Background(), sink)
+
+	// Send that Event.
+	result := c.Send(ctx, event)
+	if result != nil {
+		log.Printf("Resutl: %s", result)
+		if cloudevents.IsUndelivered(result) {
+			log.Printf("failed to send, %v", result)
+			return result
+		}
+	}
+	return nil
 }
