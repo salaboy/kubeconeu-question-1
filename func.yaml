@@ -3,7 +3,7 @@ name: kubeconeu-question-1
 namespace: ""
 runtime: go
 registry: ""
-image: quay.io/lanceball/kubeconeu-question-1:latest
+image: docker.io/salaboy/kubeconeu-question-1:latest
 imageDigest: sha256:e7a0d187b35cc89a99abe51d7b33c68240251262e74aad36d70b5199b88388a7
 build: local
 git: {}
