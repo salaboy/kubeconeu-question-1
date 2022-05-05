@@ -4,7 +4,7 @@ namespace: ""
 runtime: go
 registry: ""
 image: docker.io/salaboy/kubeconeu-question-1:latest
-imageDigest: sha256:e7a0d187b35cc89a99abe51d7b33c68240251262e74aad36d70b5199b88388a7
+imageDigest: sha256:36ffa0156061a1177aef824e2d9824f480b7c9d0f507c9597e619ad7a60636a3
 build: local
 git:
   url: null
@@ -23,9 +23,9 @@ buildEnvs: []
 envs:
 - name: REDIS_HOST
   value: 10.200.130.188:6379
-- name: CLOUDEVENTS_ENABLED
+- name: GAME_EVENTING_ENABLED
   value: "true"
-- name: SINK
+- name: GAME_EVENTING_BROKER_URI
   value: http://sockeye.default.svc.cluster.local/
 annotations: {}
 options: {}

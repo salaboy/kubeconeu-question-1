@@ -33,9 +33,9 @@ type GameScore struct {
 
 var redisHost = os.Getenv("REDIS_HOST") // This should include the port which is most of the time 6379
 var redisPassword = os.Getenv("REDIS_PASSWORD")
-var cloudEventsEnabled = os.Getenv("CLOUDEVENTS_ENABLED")
-var sink = os.Getenv("SINK")
-
+var gameEventingEnabled = os.Getenv("GAME_EVENTING_ENABLED")
+var sink = os.Getenv("GAME_EVENTING_BROKER_URI")
+var cloudEventsEnabled bool = false
 // Handle an HTTP Request.
 func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	client := redis.NewClient(&redis.Options{
@@ -43,6 +43,10 @@ func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 		Password: redisPassword,
 		DB:       0,
 	})
+
+	if gameEventingEnabled != "" && gameEventingEnabled != "false"{
+		cloudEventsEnabled = true
+	}
 
 	points := 0
 	var answers Answers
@@ -56,10 +60,10 @@ func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	}
 
 	if answers.OptionA == true {
-		points =  0
+		points = 0
 	}
 	if answers.OptionB == true {
-		points= 5
+		points = 5
 	}
 	if answers.OptionC == true {
 		points = 0
@@ -71,25 +75,27 @@ func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 
 	points += answers.RemainingTime
 
-	score := GameScore {
-		SessionId: answers.SessionId,
-		Level: "kubeconeu-question-1",
+	score := GameScore{
+		SessionId:  answers.SessionId,
+		Level:      "kubeconeu-question-1",
 		LevelScore: points,
-		Time: time.Now(),
+		Time:       time.Now(),
 	}
 	scoreJson, err := json.Marshal(score)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = client.RPush("score-" + answers.SessionId, string(scoreJson)).Err()
+	err = client.RPush("score-"+answers.SessionId, string(scoreJson)).Err()
 	// if there has been an error setting the value
 	// handle the error
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	emitCloudEvent(scoreJson)
+	if cloudEventsEnabled {
+		emitCloudEvent(scoreJson)
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	fmt.Fprintln(res, string(scoreJson))
