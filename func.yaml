@@ -4,7 +4,7 @@ namespace: ""
 runtime: go
 registry: ""
 image: docker.io/salaboy/kubeconeu-question-1:latest
-imageDigest: sha256:36ffa0156061a1177aef824e2d9824f480b7c9d0f507c9597e619ad7a60636a3
+imageDigest: sha256:240b83ca731c21c064f424c20673d1a609675d041ace4216f32da06c5fa39e6b
 build: local
 git:
   url: null
@@ -26,7 +26,7 @@ envs:
 - name: GAME_EVENTING_ENABLED
   value: "true"
 - name: GAME_EVENTING_BROKER_URI
-  value: http://sockeye.default.svc.cluster.local/
+  value: http://broker-ingress.knative-eventing.svc.cluster.local/default/default
 annotations: {}
 options: {}
 labels: []

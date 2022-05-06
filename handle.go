@@ -15,6 +15,7 @@ import (
 
 
 type Answers struct {
+	Player string `json:"player"`
 	SessionId string `json:"sessionId"`
 	OptionA bool `json:"optionA"`
 	OptionB bool `json:"optionB"`
@@ -24,6 +25,7 @@ type Answers struct {
 }
 
 type GameScore struct {
+	Player string
 	SessionId string
 	Time      time.Time
 	Level     string
@@ -76,6 +78,7 @@ func Handle(ctx context.Context, res http.ResponseWriter, req *http.Request) {
 	points += answers.RemainingTime
 
 	score := GameScore{
+		Player: answers.Player,
 		SessionId:  answers.SessionId,
 		Level:      "kubeconeu-question-1",
 		LevelScore: points,
