@@ -4,7 +4,7 @@ namespace: ""
 runtime: go
 registry: ""
 image: docker.io/salaboy/kubeconeu-question-1:latest
-imageDigest: sha256:240b83ca731c21c064f424c20673d1a609675d041ace4216f32da06c5fa39e6b
+imageDigest: sha256:55a5f8efa7d7503be960a03beda6808555aa3a0c1d880dba536ce291bd97e9a1
 build: local
 git: {}
 builder: gcr.io/paketo-buildpacks/builder:base
